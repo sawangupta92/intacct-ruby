@@ -13,14 +13,18 @@ module IntacctRuby
       create
       update
       delete
+      create_invoice
+      create_potransaction
+      update_potransaction
     ).freeze
 
     CU_TYPES = %w(create update).freeze
 
-    def initialize(function_type, object_type: nil, parameters: )
+    def initialize(function_type, function_options, object_type: nil, parameters: )
       @function_type = function_type.to_s
       @object_type = object_type.to_s
       @parameters = parameters
+      @function_options = function_options
 
       validate_type!
     end
@@ -29,7 +33,7 @@ module IntacctRuby
       xml = Builder::XmlMarkup.new
 
       xml.function controlid: controlid do
-        xml.tag!(@function_type) do
+        xml.tag!(@function_type, @function_options) do
           if CU_TYPES.include?(@function_type)
             xml.tag!(@object_type) do
               xml << parameter_xml(@parameters)
@@ -59,8 +63,11 @@ module IntacctRuby
       parameters_to_convert.each do |key, value|
         parameter_key = key.to_s
 
-        xml.tag!(parameter_key) do
-          xml << parameter_value_as_xml(value)
+        xml_value = value.is_a?(Hash) ? value.except(:xml_tag) : value
+        xml_tag_value = value.is_a?(Hash) ? value[:xml_tag] : nil
+
+        xml.tag!(parameter_key, xml_tag_value) do
+          xml << parameter_value_as_xml(xml_value)
         end
       end
 
