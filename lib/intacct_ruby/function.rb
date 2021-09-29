@@ -16,6 +16,7 @@ module IntacctRuby
       create_invoice
       create_potransaction
       update_potransaction
+      delete_potransaction
     ).freeze
 
     CU_TYPES = %w(create update).freeze
